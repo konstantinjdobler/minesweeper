@@ -1,6 +1,8 @@
-from tkinter import *
 from tkinter import messagebox
 from tkinter import simpledialog
+from tkinter import DISABLED
+from tkinter import Button
+from tkinter import Tk
 import random
 from field_class import *
 
