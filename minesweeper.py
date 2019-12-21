@@ -6,7 +6,7 @@ from tkinter import Tk
 import random
 from field_class import *
 
-
+FIRST_CLICK_DONE=False
 OVER = False
 BOMB_COUNT = 110
 FIELD_HEIGHT = 20
@@ -16,20 +16,22 @@ CORRECT_FLAGS = 0
 gui_field_list = [[None] * FIELD_WIDTH for i in range(FIELD_HEIGHT)]
 field_list = [[None] * FIELD_WIDTH for i in range(FIELD_HEIGHT)]
 
-def iterate_over_neighbours(condition, action):
+def count_neighbours(x, y, condition):
+	counter = 0
 	for j in range(-1, 2):
 		for i in range(-1, 2):
 			if x+i >= 0 and y+j >=0:
 				try:
-					if field_list[y+j][x+i].is_bomb() == True: 
+					if condition(field_list[y+j][x+i]) == True: 
 						counter +=1
 				except: IndexError
+	return counter
 
-def set_bombs():
+def set_bombs(exclude_x, exclude_y):
 	for _ in range(BOMB_COUNT):
 		random_y = random.randint(0,FIELD_HEIGHT-1)
 		random_x = random.randint(0,FIELD_WIDTH-1)
-		while field_list[random_y][random_x].is_bomb() == True:
+		while field_list[random_y][random_x].is_bomb() is True or random_x == exclude_x and random_y is exclude_y:
 			random_y = random.randint(0,FIELD_HEIGHT-1)
 			random_x = random.randint(0,FIELD_WIDTH-1)
 		field_list[random_y][random_x].set_bomb_status(True)
@@ -40,34 +42,14 @@ def set_field_values():
 			field_list[y][x].set_value(count_neighbour_bombs(x,y))   
 
 def count_neighbour_bombs(x, y):
-	counter = 0
-	for j in range(-1, 2):
-		for i in range(-1, 2):
-				try:
-					if field_list[y+j][x+i].is_bomb() == True: 
-						counter +=1
-				except: IndexError
-	return counter
+	return count_neighbours(x, y, lambda neighbour: neighbour.is_bomb())
 
 def count_flagged_neighbours(x, y):
-	counter = 0
-	for j in range(-1, 2):
-		for i in range(-1, 2):
-				try:
-					if field_list[y+j][x+i].is_flagged() == True: 
-						counter +=1
-				except: IndexError
-	return counter
+	return count_neighbours(x, y, lambda neighbour: neighbour.is_flagged())
 
 def count_hidden_neighbours(x, y):
-	counter = 0
-	for j in range(-1, 2):
-		for i in range(-1, 2):
-				try:
-					if field_list[y+j][x+i].is_hidden() == True: 
-						counter +=1
-				except: IndexError
-	return counter
+	return count_neighbours(x, y, lambda neighbour: neighbour.is_hidden())
+
 
 def click_hidden_neighbours(x,y):
 	for j in range(-1, 2):
@@ -90,6 +72,11 @@ def clear_zeros(x,y):
 				except: IndexError
 
 def click_field(x, y, update=True):
+	global FIRST_CLICK_DONE
+	if(FIRST_CLICK_DONE is not True):
+		set_bombs(x,y)
+		set_field_values()
+		FIRST_CLICK_DONE = True
 	field_list[y][x].set_hidden_status(False)   
 	if field_list[y][x].get_value() == 0: clear_zeros(x,y)
 	if update: update_fields()
@@ -121,10 +108,11 @@ def auto_flag(event = None):
 def flag_hidden_neighbours(x,y):
 	for j in range(-1, 2):
 		for i in range(-1, 2):
-			try:
-				if field_list[y+j][x+i].is_hidden() == True:
-					flag_field(None, x+i,y+j,True)
-			except: IndexError
+			if x+i >= 0 and y+j >=0:
+				try:
+					if field_list[y+j][x+i].is_hidden() == True:
+						flag_field(None, x+i,y+j,True)
+				except: IndexError
 
 def auto_flag_all(event = None):
 	for y in range (0,FIELD_HEIGHT):
@@ -177,7 +165,7 @@ def update_fields():
 				elif field_list[y][x].value == 4: gui_field_list[y][x].configure(text = str(field_list[y][x].value), bg = "light grey",state = DISABLED, disabledforeground = "yellow")
 				elif field_list[y][x].value >= 5: gui_field_list[y][x].configure(text = str(field_list[y][x].value), bg = "light grey",state = DISABLED, disabledforeground = "black")
 			elif field_list[y][x].is_flagged(): 
-				gui_field_list[y][x].configure(bg = "violet")
+				gui_field_list[y][x].configure(highlightbackground = "violet")
 			else: gui_field_list[y][x].configure(bg = "grey")
 
 def quit():
@@ -197,9 +185,6 @@ for y in range (0,FIELD_HEIGHT):
 	for x in range(0,FIELD_WIDTH):
 		field_list[y][x] = Field(x,y)
 		
-		
-set_bombs()
-set_field_values()
 for y in range (0,FIELD_HEIGHT):
 	for x in range(0,FIELD_WIDTH):
 		gui_field_list[y][x] = Button(root, bg = "grey", command = lambda y1=y, x1=x: click_field(x1,y1), relief = "ridge", font = ("Arial", 20, "bold"))
