@@ -1,33 +1,33 @@
 class Field:
-	hidden = True
-	bomb = False
-	value = 0
-	flagged = False
+	hidden: bool = True
+	bomb: bool = False
+	value: int = 0
+	flagged: bool = False
 	def __init__(self, x, y):
 		self.x = x
 		self.y = y
 		
 
-	def setBomb(self, bool):
-		self.bomb = bool
+	def set_bomb_status(self, state: bool):
+		self.bomb = state
 
-	def setFlag(self, bool):
-		self.flagged = bool
+	def set_flag_status(self, state: bool):
+		self.flagged = state
 
-	def setHidden(self, bool):
-		self.hidden = bool
+	def set_hidden_status(self, state: bool):
+		self.hidden = state
 
-	def setValue(self, i):
-		self.value = i
+	def set_value(self, value: int):
+		self.value = value
 
-	def isBomb(self):
+	def is_bomb(self):
 		return self.bomb 
 
-	def isHidden(self):
+	def is_hidden(self):
 		return self.hidden 
 
-	def getValue(self):
+	def get_value(self):
 		return self.value
 
-	def isFlagged(self):
+	def is_flagged(self):
 		return self.flagged
